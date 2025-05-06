@@ -3,6 +3,12 @@
 # Description: A web app to explore housing data in New York.
 # Users can search homes by city, price, and bedrooms, see top homes, averages, and view charts/maps.
 
+# We built the app around these main questions:
+# - What are the most expensive homes in a given city?
+# - Can I find homes under a certain price with a specific number of bedrooms?
+# - What are the average price and square footage in a city?
+# - How do variables like bedrooms and size relate to price?”
+
 # Import necessary libraries
 import streamlit as st
 import pandas as pd
@@ -26,7 +32,7 @@ page = st.sidebar.radio("Choose a section:",
                          "Averages by City", 
                          "Visualizations"))
 
-# [PY1] Function with two parameters
+# [PY1] Function with two parameters to get the top expensive homes by city
 #ChatGPT-assisted: Prompt used — “Write a Python function that returns the top 10 most expensive homes
 # in a given city from a housing dataset with columns like 'PRICE' and 'LOCALITY'.”
 #Uses: pandas — for filtering and sorting tabular data efficiently
@@ -34,16 +40,16 @@ def top_expensive_homes(data, city_name):
     homes_in_city = data[data['LOCALITY'] == city_name]
     return homes_in_city.sort_values(by='PRICE', ascending=False).head(10)
 
-# [PY2] Function returning multiple values
+# [PY2] Function returning multiple values (average price and sqft)
 # Uses: pandas — .mean() makes it easy to calculate column-wise averages
 def calculate_averages(data, city_name):
     homes = data[data['LOCALITY'] == city_name]
     return homes['PRICE'].mean(), homes['PROPERTYSQFT'].mean()
 
-# [PY3] Using Lists
+# [PY3] Using lists to store all cities
 cities = sorted(df['LOCALITY'].dropna().unique())
 
-# [PY4] Dictionary Example
+# [PY4] Dictionary to assign the cities indexes
 city_dict = {city: i for i, city in enumerate(cities)}
 
 # Page 1: Top 10 Expensive Homes
@@ -61,7 +67,7 @@ elif page == "Filter Homes":
     min_beds = st.number_input("Min Number of Bedrooms:", min_value=1, max_value=10, value=3) # [ST3]
 
     # ChatGPT-assisted: Prompt used — "How can I filter a pandas DataFrame for homes in a specific city
-    # that cost less than a user-defined price and have at least a certain number of bedrooms?"
+    # that cost less than a user-defined price and have at least a certain number of bedrooms?
     # Show homes in that city under the price and with enough bedrooms
     filtered_homes = df[(df['LOCALITY'] == selected_city) & 
                         (df['PRICE'] <= max_price) & 
@@ -123,9 +129,9 @@ elif page == "Visualizations":
             zoom=7,
             pitch=50,
         ),
-        # Uses: pydeck
-        # Enables interactive scatterplot layers over a real map
-        # Good for plotting many geographic points (like home locations)
+    # Uses: pydeck
+    # Enables interactive scatterplot layers over a real map
+    # Good for plotting many geographic points (like home locations)
         layers=[
             pdk.Layer(
                 'ScatterplotLayer',
@@ -137,7 +143,7 @@ elif page == "Visualizations":
         ],
     ))
 
-    # [SEA1] Seaborn Chart - Beds vs Price
+    # [SEA1] Seaborn Boxplot - Beds vs Price
     # ChatGPT-assisted: Prompt used — “How can I make a boxplot of price versus number of bedrooms using
     # seaborn in Streamlit, but only include homes under $10M and with fewer than 10 bedrooms?”
     st.subheader("Price Compared to Bedrooms")
@@ -146,10 +152,10 @@ elif page == "Visualizations":
     ax3.set_title("Price vs Bedrooms (Beds < 10, Price < $10M)")
     st.pyplot(fig3)
 
-    # [EXTRA][SEA2] Seaborn Scatterplot [EXTRA][SEA2]
-    st.subheader("Scatterplot of Square Footage vs Price")
+    # [EXTRA][SEA2] Seaborn Scatterplot with Regression Line
+    st.subheader("Scatterplot of Square Footage vs Price with LSRL")
     fig4, ax4 = plt.subplots()
-    sns.scatterplot(x='PROPERTYSQFT', y='PRICE', data=filtered_df, ax=ax4)
+    sns.regplot(x='PROPERTYSQFT', y='PRICE', data=filtered_df, ax=ax4, scatter_kws={'alpha': 0.5})
     ax4.set_title("Square Footage vs Price (Filtered)")
     st.pyplot(fig4)
 
@@ -185,13 +191,7 @@ price_categories = pd.cut(df['PRICE'], bins=[0, 500000, 1000000, 5000000, 100000
 df['PriceRange'] = price_categories
 
 # [EXTRA][DA9] Add a new column (Price per SqFt)
-# ChatGPT-assisted: Prompt used — “How do I create a new column in pandas that calculates price per square foot
-# from 'PRICE' and 'PROPERTYSQFT'?”
 df['Price_per_SqFt'] = df['PRICE'] / df['PROPERTYSQFT']
 
 # Reference:
 # [EXTRA][PACKAGE]: Used folium and streamlit_folium for interactive mapping.
-# See section 1 of AI usage report if applicable.
-
-
-
